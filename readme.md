@@ -1,4 +1,4 @@
-# Univ3 Substreams Downloader
+# Uniswap Swaps Subgraph Downloader
 
 This tool allows you to quickly query historical swap data from univ2 and univ3 subgraphs.
 
