@@ -58,6 +58,8 @@ After cloning the repository, create a virtual environment and install `subgroun
 
 Run the following commands to query the subgraphs using the format `python univ3_substreams_async.py <date> <days>`. For example the below examples will query the subgraphs swap entity for the 7 days following 2023-11-20:
 
-`python univ3_substreams_async.py 2023-11-20 7` -> Query for 2023-11-26 completed in 74.38s
+`python univ3_substreams_async.py 2023-11-20 7`
 
-`python univ2_async.py 2023-11-20 7` -> 10931 queries...
+`python univ2_async.py 2023-11-20 7`
+
+Note the query size is set at 2,500. Set the `QUERY_SIZE` variable to a very large number to download the entire swaps for the day (~250,000 size should be more than enough)
