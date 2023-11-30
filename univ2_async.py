@@ -8,6 +8,9 @@ import pandas as pd
 
 from subgrounds import AsyncSubgrounds
 
+QUERY_SIZE = 250000  # set to a smaller number if you want to query a smaller subset of rows
+PROTOCOL_NAME = "uniswap_v2"
+
 # Get command line date parameters
 start_date = sys.argv[1]
 date_range = int(sys.argv[2])
@@ -21,13 +24,21 @@ date_ranges = [
     for start_date in [start_date + timedelta(days=i) for i in range(0, date_range, 1)]
 ]
 
-protocol_name = "uniswap_v2"
 # Create a data folder if it doesn't exist
-if not os.path.exists(f"data/{protocol_name}"):
-    os.makedirs(f"data/{protocol_name}")
+if not os.path.exists(f"data/{PROTOCOL_NAME}"):
+    os.makedirs(f"data/{PROTOCOL_NAME}")
 
 
 async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
+    """
+    Run a query for a specific date range using the Subgrounds library.
+
+    Args:
+        date_range (tuple): A tuple containing start and end dates.
+
+    Returns:
+        pd.DataFrame: DataFrame containing query results.
+    """
     async with AsyncSubgrounds() as sg:
         # https://thegraph.com/explorer/subgraphs/A3Np3RQbaBA6oKJgiwDJeo5T3zrYfGHPWFYayMwtNDum?view=Overview&chain=arbitrum-one
         deployment_id: str = "QmXYAmabbEmnSDNR5GWJhmm2NQKXnPkSJEBC3EsMwjXr4e"
@@ -39,18 +50,21 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
         t0 = time.perf_counter()
         start_date, end_date = date_range
         try:
-            filename = f"data/{protocol_name}/swaps_{start_date.date()}.csv"
+            filename = f"data/{PROTOCOL_NAME}/swaps_{start_date.date()}.csv"
             if not os.path.exists(filename):
                 swaps_qp = subgraph.Query.swaps(
-                    first=250000,
+                    first=QUERY_SIZE,
                     where=[
                         subgraph.Swap.timestamp >= int(start_date.timestamp()),
                         subgraph.Swap.timestamp <= int(end_date.timestamp()),
                     ],
                 )
                 print(f"Query for {start_date.date()} started")
-                # Await the result of the asynchronous call
+                # Define the query fields
                 df: pd.DataFrame = await sg.query_df([
+                    swaps_qp.transaction._select('id'),
+                    swaps_qp.transaction.blockNumber,
+                    swaps_qp.transaction.timestamp,
                     swaps_qp.amountUSD,
                     swaps_qp.amount0In,
                     swaps_qp.amount0Out,
@@ -78,7 +92,7 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
                     f"Query for {start_date.date()} completed in {t1 - t0:0.2f}s")
 
                 # insert custom data features
-                df.insert(0, "protocol", protocol_name)
+                df.insert(0, "protocol", PROTOCOL_NAME)
 
                 # Save the DataFrame
                 df.to_csv(filename)
@@ -92,11 +106,24 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
 
 
 async def run_query_with_semaphore(semaphore, date_range: tuple[datetime, datetime]) -> pd.DataFrame:
+    """
+    Run a query with a semaphore to limit the number of concurrent async calls.
+
+    Args:
+        semaphore: asyncio.Semaphore to control concurrency.
+        date_range (tuple): A tuple containing start and end dates.
+
+    Returns:
+        pd.DataFrame: DataFrame containing query results.
+    """
     async with semaphore:
         return await run_query(date_range)
 
 
 async def main():
+    """
+    Main function to run asynchronous queries for multiple date ranges.
+    """
     t0 = time.perf_counter()
 
     # Limit the number of concurrent async calls to 15
@@ -113,4 +140,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
