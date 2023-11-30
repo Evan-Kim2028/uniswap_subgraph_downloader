@@ -8,7 +8,7 @@ import pandas as pd
 
 from subgrounds import AsyncSubgrounds
 
-QUERY_SIZE = 250000  # set to a smaller number if you want to query a smaller subset of rows
+QUERY_SIZE = 2500  # set to a smaller number if you want to query a smaller subset of rows
 PROTOCOL_NAME = "uniswap_v3"
 
 # Get command line date parameters
@@ -63,11 +63,16 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
 
                 # Define the query fields
                 df: pd.DataFrame = await sg.query_df([
-                    swaps_qp.timestamp,
                     swaps_qp.transaction.id,
                     swaps_qp.transaction.blockNumber,
                     swaps_qp.transaction.timestamp,
+                    swaps_qp.transaction.gasPrice,
+                    swaps_qp.transaction.gasUsed,
+                    swaps_qp.transaction.flashed.id,
+                    swaps_qp.transaction.flashed.amountUSD,
+                    swaps_qp.logIndex,
                     swaps_qp.sqrtPriceX96,
+                    swaps_qp.tick,
                     swaps_qp.pool.id,
                     swaps_qp.pool.liquidity,
                     swaps_qp.pool.token0Price,
