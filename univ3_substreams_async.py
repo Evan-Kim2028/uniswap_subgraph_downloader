@@ -72,6 +72,7 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
                     swaps_qp.sqrtPriceX96,
                     swaps_qp.tick,
                     swaps_qp.pool.id,
+                    swaps_qp.pool.feeTier,
                     swaps_qp.pool.liquidity,
                     swaps_qp.pool.token0Price,
                     swaps_qp.pool.token1Price,
