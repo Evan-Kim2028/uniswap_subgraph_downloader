@@ -68,8 +68,6 @@ async def run_query(date_range: tuple[datetime, datetime]) -> pd.DataFrame:
                     swaps_qp.transaction.timestamp,
                     swaps_qp.transaction.gasPrice,
                     swaps_qp.transaction.gasUsed,
-                    swaps_qp.transaction.flashed.id,
-                    swaps_qp.transaction.flashed.amountUSD,
                     swaps_qp.logIndex,
                     swaps_qp.sqrtPriceX96,
                     swaps_qp.tick,
